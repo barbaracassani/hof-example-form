@@ -5,10 +5,13 @@ var app = express();
 var path = require('path');
 var logger = require('./lib/logger');
 var churchill = require('churchill');
-var session = require('express-session');
-var redis = require('redis');
-var RedisStore = require('connect-redis-crypto')(session);
+
 var config = require('./config');
+
+var initSession = require('./lib/sessionLayer/session-layer');
+var secureCookies = require('./lib/sessionLayer/secure-cookies');
+var cookieParser = require('./lib/sessionLayer/cookie-parser');
+
 require('moment-business');
 
 if (config.env !== 'ci') {
@@ -39,47 +42,7 @@ app.use(function setBaseUrl(req, res, next) {
   next();
 });
 
-/*************************************/
-/******* Redis session storage *******/
-/*************************************/
-var client = redis.createClient(config.redis.port, config.redis.host);
-
-client.on('error', function clientErrorHandler(e) {
-  throw e;
-});
-
-var redisStore = new RedisStore({
-  client: client,
-  ttl: config.session.ttl,
-  secret: config.session.secret
-});
-
-function secureCookies(req, res, next) {
-  var cookie = res.cookie.bind(res);
-  res.cookie = function cookieHandler(name, value, options) {
-    options = options || {};
-    options.secure = (req.protocol === 'https');
-    options.httpOnly = true;
-    options.path = '/';
-    cookie(name, value, options);
-  };
-  next();
-}
-
-function initSession(req, res, next) {
-  session({
-    store: redisStore,
-    cookie: {
-      secure: (req.protocol === 'https')
-    },
-    key: 'hmbrp.sid',
-    secret: config.session.secret,
-    resave: true,
-    saveUninitialized: true
-  })(req, res, next);
-}
-
-app.use(require('cookie-parser')(config.session.secret));
+app.use(cookieParser);
 app.use(secureCookies);
 app.use(initSession);
 
@@ -89,6 +52,7 @@ app.use(require('./apps/my_awesome_form/'));
 app.get('/cookies', function renderCookies(req, res) {
   res.render('cookies');
 });
+
 app.get('/terms-and-conditions', function renderTerms(req, res) {
   res.render('terms');
 });
