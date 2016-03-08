@@ -8,9 +8,7 @@ var churchill = require('churchill');
 
 var config = require('./config');
 
-var initSession = require('./lib/sessionLayer/session-layer');
-var secureCookies = require('./lib/sessionLayer/secure-cookies');
-var cookieParser = require('./lib/sessionLayer/cookie-parser');
+var sessionMiddleware = require('./lib/sessionLayer/index')(config);
 
 require('moment-business');
 
@@ -42,9 +40,9 @@ app.use(function setBaseUrl(req, res, next) {
   next();
 });
 
-app.use(cookieParser);
-app.use(secureCookies);
-app.use(initSession);
+app.use(sessionMiddleware.cookieParser);
+app.use(sessionMiddleware.secureCookies);
+app.use(sessionMiddleware.initSession);
 
 // apps
 app.use(require('./apps/my_awesome_form/'));
