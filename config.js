@@ -15,6 +15,9 @@ module.exports = {
     port: process.env.REDIS_PORT || 6379,
     host: process.env.REDIS_HOST || '127.0.0.1'
   },
+  mongo : {
+    connectionString : process.env.MONGO_CONNECTION_STRING || 'mongodb://localhost:27017/applicationdb'
+  },
   email: {
     caseworker: {
       error: process.env.CASEWORKER_ERROR_EMAIL || 'caseworker_email_address',
